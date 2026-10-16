@@ -1,0 +1,137 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Smoke House | Painel Administrativo (Teste)</title><style>:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#11100f;color:#f5f0e7;font:15px system-ui,Arial}header{background:#1e1a16;border-bottom:1px solid #59452c;padding:20px max(20px,calc((100vw - 1080px)/2))}h1{font-size:24px;color:#dcb477;margin:0}header small{color:#a99a87}main{max-width:1080px;margin:32px auto;padding:0 18px}.card{background:#201c18;border:1px solid #51402d;border-radius:15px;padding:22px;margin-bottom:20px}h2{font-size:19px;margin:0 0 16px}label{display:block;margin:12px 0 6px;color:#e2d1bb}input{width:100%;padding:13px;background:#111;border:1px solid #6b5437;border-radius:9px;color:white;font:inherit}button{background:#cba064;color:#1b1309;border:0;border-radius:9px;padding:12px 18px;font-weight:700;cursor:pointer;margin-top:14px}button:disabled{opacity:.5;cursor:not-allowed}.outline{background:transparent;color:#e5c99d;border:1px solid #8b6c47}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.muted{color:#b8a894}.warn{color:#e8bf84}.error{color:#ffa9a9}.success{color:#b3e3b9}.table-wrap{overflow-x:auto}table{border-collapse:collapse;width:100%}th,td{text-align:left;padding:12px;border-bottom:1px solid #453a2f}th{color:#d9b47d}tr:last-child td{border-bottom:0}.pill{border-radius:20px;background:#463522;padding:4px 9px;font-size:12px;white-space:nowrap}.zero{color:#f4aaa5}.stats{display:flex;gap:14px;flex-wrap:wrap}.stat{flex:1;min-width:150px;background:#2d251d;border-radius:10px;padding:16px}.stat b{display:block;font-size:26px;color:#e0b87c}.hidden{display:none!important}footer{text-align:center;color:#968675;padding:30px}select{width:100%;padding:13px;background:#111;border:1px solid #6b5437;border-radius:9px;color:white;font:inherit}input[type=number]{max-width:240px}#movementForm{max-width:600px}#movementMsg{min-height:24px}td{vertical-align:top}</style></head><body><header><h1>SMOKE HOUSE</h1><small>Painel Administrativo • Versão de teste 6 • Login persistente • Somente consulta</small></header><main><section id="login" class="card"><h2>Entrar no painel</h2><p class="muted">Use o e-mail e a senha cadastrados no Supabase Authentication.</p><form id="loginForm"><label for="email">E-mail</label><input id="email" type="email" autocomplete="username" required><label for="password">Senha</label><input id="password" type="password" autocomplete="current-password" required><label style="display:flex;align-items:center;gap:9px;margin-top:15px"><input id="remember" type="checkbox" checked style="width:18px;height:18px;accent-color:#cba064"> Manter conectado neste dispositivo</label><button id="enter" type="submit">Entrar</button></form><p id="loginMsg" role="status"></p></section><section id="dashboard" class="hidden"><div class="top"><div><h2>Estoque compartilhado</h2><p id="userInfo" class="muted"></p></div><div><button id="refresh" class="outline">Atualizar</button> <button id="logout" class="outline">Sair</button></div></div><div class="stats"><div class="stat"><span>Produtos</span><b id="count">—</b></div><div class="stat"><span>Unidades no estoque</span><b id="units">—</b></div><div class="stat"><span>Produtos esgotados</span><b id="out">—</b></div></div><section class="card" style="margin-top:20px"><h2>Produtos e variações</h2><p class="muted">Os valores vêm diretamente do Supabase. Atualize após cada movimentação.</p><p id="stockMsg" role="status"></p><div class="table-wrap"><table><thead><tr><th>Produto</th><th>Estoque total</th><th>Variações</th></tr></thead><tbody id="products"></tbody></table></div></section><section class="card"><h2>Entrada e saída de mercadorias</h2><p class="muted">Escolha o produto, selecione a variação quando houver e registre o motivo. Entrada soma unidades; saída retira unidades.</p><form id="movementForm"><label for="moveProduct">Produto</label><select id="moveProduct" required><option value="">Selecione um produto</option></select><div id="variationBox" class="hidden"><label for="moveVariation">Variação</label><select id="moveVariation"><option value="">Selecione a variação</option></select></div><label for="moveType">Operação</label><select id="moveType"><option value="entrada">Entrada (+)</option><option value="saida">Saída manual (−)</option></select><label for="moveQuantity">Quantidade de unidades</label><input id="moveQuantity" type="number" min="1" step="1" required placeholder="Ex.: 3"><label for="moveReason">Motivo</label><input id="moveReason" type="text" maxlength="180" required placeholder="Ex.: reposição de fornecedor ou avaria"><button id="saveMovement" type="submit">Registrar movimentação</button></form><p id="movementMsg" role="status" aria-live="polite"></p></section><section class="card"><div class="top"><h2>Histórico de movimentações</h2><button id="refreshHistory" class="outline" type="button">Atualizar histórico</button></div><p id="historyMsg" class="muted" role="status"></p><div class="table-wrap"><table><thead><tr><th>Data</th><th>Produto / variação</th><th>Quantidade</th><th>Motivo</th></tr></thead><tbody id="historyRows"></tbody></table></div></section><section class="card"><h2>Registro de vendas</h2><p class="warn">Ainda indisponível nesta versão de teste. Vamos ativar após validar a autenticação real e a baixa automática.</p></section></section></main><footer>Smoke House • Acesso administrativo</footer><script>
+'use strict';
+const SUPABASE_URL='https://ertpylsaglkievyjzhfj.supabase.co';
+const PUBLISHABLE_KEY='sb_publishable_FJi2q6VG_gNEZup1BzkmpQ_QoHsGPwe';
+const $=id=>document.getElementById(id);
+const message=(id,msg,error=false)=>{const el=$(id);el.textContent=msg;el.className=error?'error':'muted';};
+let accessToken=null;
+let productCache=[];let variationCache=[];
+const SESSION_KEY='smoke_house_admin_session_v5';
+let refreshToken=null;
+let expiresAt=0;
+let persistent=false;
+function clearSession(){accessToken=null;refreshToken=null;expiresAt=0;persistent=false;try{localStorage.removeItem(SESSION_KEY)}catch{}}
+function storeSession(data,remember){
+ accessToken=data.access_token;refreshToken=data.refresh_token||null;
+ expiresAt=Date.now()+(Number(data.expires_in)||3600)*1000;
+ persistent=remember;
+ if(remember&&refreshToken){try{localStorage.setItem(SESSION_KEY,JSON.stringify({refreshToken,expiresAt}))}catch{}}
+ else{try{localStorage.removeItem(SESSION_KEY)}catch{}}
+}
+async function renewSession(){
+ if(!refreshToken)throw new Error('Sessão expirada. Entre novamente.');
+ const result=await api('/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{Authorization:''},body:JSON.stringify({refresh_token:refreshToken})});
+ storeSession(result,persistent);return result;
+}
+async function checkAdmin(){
+ const isAdmin=await api('/rest/v1/rpc/eh_administrador',{method:'POST',body:'{}'});
+ if(isAdmin!==true)throw new Error('Este usuário não possui acesso administrativo.');
+}
+async function showDashboard(email){
+ $('password').value='';$('login').classList.add('hidden');$('dashboard').classList.remove('hidden');
+ $('userInfo').textContent='Conectado: '+(email||'administrador');await load();await loadHistory();
+}
+async function restoreSession(){
+ let saved;try{saved=JSON.parse(localStorage.getItem(SESSION_KEY)||'null')}catch{return}
+ if(!saved?.refreshToken)return;
+ persistent=true;refreshToken=saved.refreshToken;
+ message('loginMsg','Restaurando sua sessão...');
+ try{
+  const result=await renewSession();await checkAdmin();await showDashboard(result.user?.email);
+ }catch(err){clearSession();message('loginMsg','Entre novamente para continuar. '+err.message,true)}
+}
+
+async function api(path, options={}) {
+ if(accessToken && expiresAt && Date.now()>expiresAt-60000 && !path.startsWith('/auth/v1/'))await renewSession();
+ const headers={'apikey':PUBLISHABLE_KEY,'Content-Type':'application/json',...(accessToken?{'Authorization':'Bearer '+accessToken}:{}),...(options.headers||{})};
+ let response;
+ try {response=await fetch(SUPABASE_URL+path,{...options,headers});}
+ catch(e){throw new Error('Falha de rede. Verifique sua internet ou tente publicar o painel em uma página HTTPS. Detalhe: '+e.message);}
+ const raw=await response.text();let data;try{data=raw?JSON.parse(raw):null;}catch{throw new Error('Resposta inesperada do servidor (HTTP '+response.status+').');}
+ if(!response.ok)throw new Error((data?.msg||data?.message||data?.error_description||data?.error||'Erro HTTP '+response.status));
+ return data;
+}
+async function load(){
+ message('stockMsg','Carregando estoque...');
+ try{
+ const [p,v]=await Promise.all([api('/rest/v1/produtos?select=id,nome,estoque,ativo&order=nome.asc'),api('/rest/v1/variacoes_produto?select=id,produto_id,nome,estoque&order=nome.asc')]);
+ $('count').textContent=p.length;$('units').textContent=p.reduce((n,x)=>n+(Number(x.estoque)||0),0);$('out').textContent=p.filter(x=>Number(x.estoque)===0).length;
+ productCache=p;variationCache=v;populateProductOptions();$('products').replaceChildren();
+ for(const item of p){const tr=document.createElement('tr'),name=document.createElement('td'),qty=document.createElement('td'),vars=document.createElement('td');name.textContent=item.nome;qty.textContent=item.estoque??'—';if(Number(item.estoque)===0)qty.className='zero';const related=v.filter(x=>x.produto_id===item.id);vars.textContent=related.length?related.map(x=>`${x.nome}: ${x.estoque}`).join(' • '):'—';tr.append(name,qty,vars);$('products').append(tr)}
+ message('stockMsg',p.length+' produtos carregados.');
+ }catch(e){message('stockMsg','Erro ao consultar estoque: '+e.message,true)}
+}
+$('loginForm').addEventListener('submit',async e=>{
+ e.preventDefault();$('enter').disabled=true;message('loginMsg','Verificando acesso...');
+ try{
+ const data=await api('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email:$('email').value.trim(),password:$('password').value})});
+ storeSession(data,$('remember').checked);
+ const uid=data.user?.id;
+ if(!uid)throw new Error('O servidor não retornou o identificador do usuário.');
+ await checkAdmin();await showDashboard(data.user.email);
+ }catch(err){clearSession();message('loginMsg','Não foi possível entrar: '+err.message,true)}finally{$('enter').disabled=false}
+});
+
+function populateProductOptions(){
+ const chosen=$('moveProduct').value;
+ $('moveProduct').replaceChildren(new Option('Selecione um produto',''));
+ for(const p of productCache)$('moveProduct').add(new Option(p.nome+' (estoque: '+p.estoque+')',String(p.id)));
+ if(productCache.some(p=>String(p.id)===chosen))$('moveProduct').value=chosen;
+ populateVariationOptions();
+}
+function populateVariationOptions(){
+ const productId=Number($('moveProduct').value);
+ const selected=$('moveVariation').value;
+ const variations=variationCache.filter(v=>v.produto_id===productId);
+ $('variationBox').classList.toggle('hidden',variations.length===0);
+ $('moveVariation').replaceChildren(new Option('Selecione a variação',''));
+ for(const v of variations)$('moveVariation').add(new Option(v.nome+' (estoque: '+v.estoque+')',String(v.id)));
+ if(variations.some(v=>String(v.id)===selected))$('moveVariation').value=selected;
+ $('moveVariation').required=variations.length>0;
+}
+$('moveProduct').addEventListener('change',populateVariationOptions);
+$('movementForm').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const productId=Number($('moveProduct').value);
+ const p=productCache.find(x=>x.id===productId);
+ const variationOptions=variationCache.filter(v=>v.produto_id===productId);
+ const variationId=$('moveVariation').value?Number($('moveVariation').value):null;
+ const count=Number($('moveQuantity').value);
+ const reason=$('moveReason').value.trim();
+ if(!p||!Number.isSafeInteger(count)||count<1||!reason){message('movementMsg','Preencha produto, quantidade inteira positiva e motivo.',true);return}
+ if(variationOptions.length&&!variationOptions.some(v=>v.id===variationId)){message('movementMsg','Selecione uma variação válida.',true);return}
+ const signed=$('moveType').value==='saida'?-count:count;
+ const varName=variationId?variationOptions.find(v=>v.id===variationId)?.nome:'';
+ const action=signed>0?'ADICIONAR':'RETIRAR';
+ if(!confirm(action+' '+count+' unidade(s) de '+p.nome+(varName?' — '+varName:'')+'?\nMotivo: '+reason))return;
+ $('saveMovement').disabled=true;message('movementMsg','Registrando movimentação...');
+ try{
+  await api('/rest/v1/rpc/movimentar_estoque',{method:'POST',body:JSON.stringify({p_produto_id:productId,p_variacao_id:variationId,p_quantidade:signed,p_motivo:reason})});
+  message('movementMsg','Movimentação registrada com sucesso.');
+  $('moveQuantity').value='';$('moveReason').value='';
+  await Promise.all([load(),loadHistory()]);
+ }catch(err){message('movementMsg','Não foi possível registrar: '+err.message,true)}
+ finally{$('saveMovement').disabled=false}
+});
+async function loadHistory(){
+ message('historyMsg','Carregando histórico...');
+ try{
+  const rows=await api('/rest/v1/movimentacoes_estoque?select=id,produto_id,variacao_id,quantidade,motivo,criado_em&order=criado_em.desc&limit=50');
+  $('historyRows').replaceChildren();
+  for(const r of rows){
+   const tr=document.createElement('tr');
+   const p=productCache.find(x=>x.id===r.produto_id);
+   const v=variationCache.find(x=>x.id===r.variacao_id);
+   const values=[new Date(r.criado_em).toLocaleString('pt-BR'),(p?.nome||'Produto '+r.produto_id)+(v?' — '+v.nome:''),(r.quantidade>0?'+':'')+r.quantidade,r.motivo];
+   for(const val of values){const td=document.createElement('td');td.textContent=val;tr.append(td)}
+   $('historyRows').append(tr);
+  }
+  message('historyMsg',rows.length?'Últimas '+rows.length+' movimentações.':'Nenhuma movimentação registrada.');
+ }catch(err){message('historyMsg','Erro ao consultar histórico: '+err.message,true)}
+}
+$('refreshHistory').addEventListener('click',loadHistory);
+
+$('refresh').addEventListener('click',async()=>{await load();await loadHistory()});
+$('logout').addEventListener('click',()=>{const oldToken=accessToken;clearSession();if(oldToken)fetch(SUPABASE_URL+'/auth/v1/logout',{method:'POST',headers:{apikey:PUBLISHABLE_KEY,Authorization:'Bearer '+oldToken}}).catch(()=>{});$('dashboard').classList.add('hidden');$('login').classList.remove('hidden');message('loginMsg','Sessão encerrada.');});
+message('loginMsg','Pronto para entrar.');restoreSession();
+</script></body></html>
