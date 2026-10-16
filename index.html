@@ -311,8 +311,8 @@ function render(){
  document.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{category=b.dataset.cat;render()});
  let q=document.getElementById('search').value.toLocaleLowerCase('pt-BR');
  document.getElementById('grid').innerHTML=products.filter(p=>(category==='Todos'||p.cat===category)&&p.name.toLocaleLowerCase('pt-BR').includes(q)).map(p=>{
-  if(p.consultOnly){return `<article class="card"><div class="photo"><img src="${p.img}" alt="${p.name}" loading="lazy"></div><div class="cardbody"><h3>${p.name}</h3><button onclick="consultOrder(${p.id})">Consultar no WhatsApp</button></div></article>`;}
-  let n=stock(p),order=isOrder(p),st=order?['Disponível para encomenda','order']:status(n),pic=(p.id===32?p.img:(photos[p.id+':']||p.img));
+  if(p.consultOnly){return `<article class="card"><div class="photo"><span class="photo-badge out">Esgotado</span><img src="${p.img}" alt="${p.name}" loading="lazy"></div><div class="cardbody"><h3>${p.name}</h3><span class="badge out">Esgotado</span><button disabled>Indisponível</button></div></article>`;}
+  let n=stock(p),order=false,st=status(n),pic=(p.id===32?p.img:(photos[p.id+':']||p.img));
   let photo=pic?`<img src="${pic}" alt="${p.name}">`:`<div class="placeholder">✧<small>Foto em conferência</small></div>`;
   let notes={8:'Escolha a versão desejada e confirme pelo WhatsApp.',11:'Consulte a cor disponível pelo WhatsApp.'};
   let variants=(p.confirmModel||p.id===8||p.id===11)?'':'';
@@ -355,7 +355,7 @@ const blendObserver=new MutationObserver(()=>blendLightBackgrounds());document.a
  const sync=document.createElement('div');sync.id='sh-sync';sync.setAttribute('role','status');
  const grid=document.getElementById('grid');grid.parentNode.insertBefore(sync,grid);
  function say(t){sync.textContent=t;}
- function lock(){for(const p of products){if(ids.has(p.id)){p.stock=0;for(const v of p.variants)v.stock=0;}}render();}
+ function lock(){for(const p of products){{p.stock=0;for(const v of p.variants)v.stock=0;}}render();}
  async function read(table,fields){
   const res=await fetch(URL+'/rest/v1/'+table+'?select='+encodeURIComponent(fields)+'&limit=1000',{
    headers:{apikey:KEY,Accept:'application/json'},cache:'no-store'});
@@ -369,7 +369,7 @@ const blendObserver=new MutationObserver(()=>blendLightBackgrounds());document.a
    const map=new Map(rows.map(p=>[Number(p.id),p]));
    if(INITIAL.some(p=>!map.has(p.id)))throw new Error('Produtos não encontrados no banco; catálogo temporariamente indisponível');
    for(const p of products){
-    if(!ids.has(p.id))continue;
+    if(!ids.has(p.id)){p.stock=0;for(const v of p.variants)v.stock=0;continue;}
     const remote=map.get(p.id);
     const active=remote.ativo===true;
     const vv=vars.filter(v=>Number(v.produto_id)===p.id);
