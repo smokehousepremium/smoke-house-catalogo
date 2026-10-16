@@ -399,18 +399,8 @@ const blendObserver=new MutationObserver(()=>blendLightBackgrounds());document.a
  window.addEventListener('focus',()=>{if(Date.now()-lastSync>12000)refresh();});
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
  const checkoutLink=document.getElementById('checkoutWhatsApp');
- checkoutLink.addEventListener('click',async event=>{
-  event.preventDefault();event.stopImmediatePropagation();
-  if(!cart.length)return;
-  const before=cart.map(x=>({id:x.id,qty:x.qty,key:x.key}));
-  const ok=await refresh();if(!ok){alert('Não foi possível verificar o estoque. Tente novamente em instantes.');return;}
-  const changed=before.some(x=>!cart.some(y=>y.key===x.key&&y.qty===x.qty));
-  if(changed){alert('O estoque mudou e alguns itens foram removidos do carrinho. Confira antes de enviar.');return;}
-  const city=document.getElementById('city')?.value;
-  if(!city){alert('Escolha Salvador ou Alagoinhas.');return;}
-  // Pedido via WhatsApp não reserva nem baixa estoque.
-  atualizarLinkWhatsApp();window.location.href=checkoutLink.href;
- },true);
+ // O envio é tratado exclusivamente pelo registrador de pedidos abaixo.
+ // Não interceptar o clique aqui: isso impedia o registro no Supabase.
 })();
 </script><script>
 /* Smoke House: registrar pedido ANTES de abrir o WhatsApp. */
