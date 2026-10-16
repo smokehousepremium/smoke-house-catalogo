@@ -412,4 +412,35 @@ const blendObserver=new MutationObserver(()=>blendLightBackgrounds());document.a
   atualizarLinkWhatsApp();window.location.href=checkoutLink.href;
  },true);
 })();
+</script><script>
+/* Smoke House: registrar pedido ANTES de abrir o WhatsApp. */
+(()=>{
+ const URL='https://ertpylsaglkievyjzhfj.supabase.co';
+ const KEY='sb_publishable_FJi2q6VG_gNEZup1BzkmpQ_QoHsGPwe';
+ let sending=false;
+ async function sendOrder(ev){
+   ev.preventDefault();if(sending)return;
+   if(!cart.length){alert('Adicione produtos ao carrinho.');return;}
+   const city=document.getElementById('city')?.value;
+   if(!['Salvador','Alagoinhas'].includes(city)){alert('Escolha Salvador ou Alagoinhas antes de finalizar.');return;}
+   sending=true;
+   const link=document.getElementById('checkoutWhatsApp');
+   const old=link.textContent;link.textContent='Registrando pedido…';link.style.pointerEvents='none';
+   try{
+     const itens=cart.map(x=>({nome:x.name,quantidade:x.qty,preco:x.price,referencia_catalogo:x.id}));
+     const subtotal=cart.reduce((sum,x)=>sum+x.qty*x.price,0);
+     const response=await fetch(URL+'/rest/v1/rpc/criar_pedido',{method:'POST',headers:{'apikey':KEY,'Content-Type':'application/json'},body:JSON.stringify({p_cidade:city,p_itens:itens,p_subtotal:subtotal})});
+     if(!response.ok)throw new Error((await response.text()).slice(0,240));
+     const numero=await response.json();
+     const msg='Olá! Gostaria de confirmar o pedido #'+numero+' na Smoke House:\nCidade: '+city+'\n\n'+cart.map(x=>x.qty+'× '+x.name+' — '+money(x.price*x.qty)).join('\n')+'\n\nSubtotal: '+money(subtotal)+'\nEntrega a confirmar.';
+     window.location.href='https://api.whatsapp.com/send?phone=5571920087204&text='+encodeURIComponent(msg);
+   }catch(err){alert('Não foi possível registrar o pedido no painel. Tente novamente. Detalhe: '+err.message);}
+   finally{sending=false;link.textContent=old;link.style.pointerEvents='auto';}
+ }
+ document.addEventListener('DOMContentLoaded',()=>{
+   const link=document.getElementById('checkoutWhatsApp');
+   if(link)link.addEventListener('click',sendOrder,true);
+ });
+ window.checkout=()=>sendOrder({preventDefault(){}});
+})();
 </script></body></html>
