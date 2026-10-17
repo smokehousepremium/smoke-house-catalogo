@@ -365,13 +365,16 @@ const blendObserver=new MutationObserver(()=>blendLightBackgrounds());document.a
  async function refresh(){
   if(busy)return false;busy=true;say('Consultando estoque atualizado…');
   try{
-   const [rows,vars]=await Promise.all([read('produtos','id,nome,estoque,ativo'),read('variacoes_produto','id,produto_id,nome,estoque')]);
+   const [rows,vars]=await Promise.all([read('produtos','id,nome,preco,estoque,ativo'),read('variacoes_produto','id,produto_id,nome,estoque')]);
    const map=new Map(rows.map(p=>[Number(p.id),p]));
    if(INITIAL.some(p=>!map.has(p.id)))throw new Error('Produtos não encontrados no banco; catálogo temporariamente indisponível');
    for(const p of products){
     if(!ids.has(p.id)){p.stock=0;for(const v of p.variants)v.stock=0;continue;}
     const remote=map.get(p.id);
     const active=remote.ativo===true;
+    const novoPreco=Number(remote.preco);
+    if(!Number.isFinite(novoPreco)||novoPreco<0)throw new Error('Preço inválido no banco: '+p.name);
+    p.price=novoPreco;
     const vv=vars.filter(v=>Number(v.produto_id)===p.id);
     const original=INITIAL.find(x=>x.id===p.id);
     if(original.variants.length){
@@ -389,6 +392,7 @@ const blendObserver=new MutationObserver(()=>blendLightBackgrounds());document.a
    ready=true;lastSync=Date.now();
    // Não mantém quantidades inválidas de um carrinho montado antes da atualização.
    cart=cart.filter(item=>{const p=products.find(x=>x.id===item.id);return p&&stock(p)>=item.qty;});
+   for(const item of cart){const p=products.find(x=>x.id===item.id);if(p)item.price=p.price;}
    render();renderCart();say('Estoque atualizado pelo sistema • Pedido sujeito à confirmação no WhatsApp.');return true;
   }catch(e){ready=false;lock();say('Não foi possível consultar o estoque agora. Pedidos temporariamente indisponíveis. '+e.message);return false;}
   finally{busy=false;}
