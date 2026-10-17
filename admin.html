@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Smoke House | Painel Administrativo</title><style>:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#11100f;color:#f5f0e7;font:15px system-ui,Arial}header{background:#1e1a16;border-bottom:1px solid #59452c;padding:20px max(20px,calc((100vw - 1080px)/2))}h1{font-size:24px;color:#dcb477;margin:0}header small{color:#a99a87}main{max-width:1080px;margin:32px auto;padding:0 18px}.card{background:#201c18;border:1px solid #51402d;border-radius:15px;padding:22px;margin-bottom:20px}h2{font-size:19px;margin:0 0 16px}label{display:block;margin:12px 0 6px;color:#e2d1bb}input{width:100%;padding:13px;background:#111;border:1px solid #6b5437;border-radius:9px;color:white;font:inherit}button{background:#cba064;color:#1b1309;border:0;border-radius:9px;padding:12px 18px;font-weight:700;cursor:pointer;margin-top:14px}button:disabled{opacity:.5;cursor:not-allowed}.outline{background:transparent;color:#e5c99d;border:1px solid #8b6c47}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.muted{color:#b8a894}.warn{color:#e8bf84}.error{color:#ffa9a9}.success{color:#b3e3b9}.table-wrap{overflow-x:auto}table{border-collapse:collapse;width:100%}th,td{text-align:left;padding:12px;border-bottom:1px solid #453a2f}th{color:#d9b47d}tr:last-child td{border-bottom:0}.pill{border-radius:20px;background:#463522;padding:4px 9px;font-size:12px;white-space:nowrap}.zero{color:#f4aaa5}.stats{display:flex;gap:14px;flex-wrap:wrap}.stat{flex:1;min-width:150px;background:#2d251d;border-radius:10px;padding:16px}.stat b{display:block;font-size:26px;color:#e0b87c}.hidden{display:none!important}footer{text-align:center;color:#968675;padding:30px}select{width:100%;padding:13px;background:#111;border:1px solid #6b5437;border-radius:9px;color:white;font:inherit}input[type=number]{max-width:240px}#movementForm{max-width:600px}#movementMsg{min-height:24px}td{vertical-align:top}</style></head><body><header><h1>SMOKE HOUSE</h1><small>Painel Administrativo • Controle de estoque • Acesso restrito</small></header><main><section id="login" class="card"><h2>Entrar no painel</h2><p class="muted">Use o e-mail e a senha cadastrados no Supabase Authentication.</p><form id="loginForm"><label for="email">E-mail</label><input id="email" type="email" autocomplete="username" required><label for="password">Senha</label><input id="password" type="password" autocomplete="current-password" required><label style="display:flex;align-items:center;gap:9px;margin-top:15px"><input id="remember" type="checkbox" checked style="width:18px;height:18px;accent-color:#cba064"> Manter conectado neste dispositivo</label><button id="enter" type="submit">Entrar</button></form><p id="loginMsg" role="status"></p></section><section id="dashboard" class="hidden"><div class="top"><div><h2>Estoque compartilhado</h2><p id="userInfo" class="muted"></p></div><div><button id="refresh" class="outline">Atualizar</button> <button id="logout" class="outline">Sair</button></div></div><div class="stats"><div class="stat"><span>Produtos</span><b id="count">—</b></div><div class="stat"><span>Unidades no estoque</span><b id="units">—</b></div><div class="stat"><span>Produtos esgotados</span><b id="out">—</b></div></div><section class="card" style="margin-top:20px"><h2>Produtos e variações</h2><p class="muted">Os valores vêm diretamente do Supabase. Atualize após cada movimentação.</p><p id="stockMsg" role="status"></p><div class="table-wrap"><table><thead><tr><th>Produto</th><th>Estoque total</th><th>Variações</th></tr></thead><tbody id="products"></tbody></table></div></section><section class="card"><h2>Entrada e saída de mercadorias</h2><p class="muted">Escolha o produto, selecione a variação quando houver e registre o motivo. Entrada soma unidades; saída retira unidades.</p><form id="movementForm"><label for="moveProduct">Produto</label><select id="moveProduct" required><option value="">Selecione um produto</option></select><div id="variationBox" class="hidden"><label for="moveVariation">Variação</label><select id="moveVariation"><option value="">Selecione a variação</option></select></div><label for="moveType">Operação</label><select id="moveType"><option value="entrada">Entrada (+)</option><option value="saida">Saída manual (−)</option></select><label for="moveQuantity">Quantidade de unidades</label><input id="moveQuantity" type="number" min="1" step="1" required placeholder="Ex.: 3"><label for="moveReason">Motivo</label><input id="moveReason" type="text" maxlength="180" required placeholder="Ex.: reposição de fornecedor ou avaria"><button id="saveMovement" type="submit">Registrar movimentação</button></form><p id="movementMsg" role="status" aria-live="polite"></p></section><section class="card"><div class="top"><h2>Histórico de movimentações</h2><button id="refreshHistory" class="outline" type="button">Atualizar histórico</button></div><p id="historyMsg" class="muted" role="status"></p><div class="table-wrap"><table><thead><tr><th>Data</th><th>Produto / variação</th><th>Quantidade</th><th>Motivo</th></tr></thead><tbody id="historyRows"></tbody></table></div></section><section class="card"><div class="top"><h2>Pedidos recebidos pelo catálogo</h2><button type="button" class="outline" id="refreshOrders">Atualizar pedidos</button></div><p class="muted">Confirme o pagamento antes de concluir. A confirmação de pedido nesta etapa NÃO dá baixa automática no estoque; registre a saída na seção de movimentações.</p><p id="orderMsg" role="status"></p><div class="table-wrap"><table><thead><tr><th>Pedido</th><th>Cidade / data</th><th>Itens</th><th>Total</th><th>Status / ação</th></tr></thead><tbody id="orderRows"></tbody></table></div></section></section></main><footer>Smoke House • Acesso administrativo</footer><script>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Smoke House | Painel Administrativo</title><style>:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#11100f;color:#f5f0e7;font:15px system-ui,Arial}header{background:#1e1a16;border-bottom:1px solid #59452c;padding:20px max(20px,calc((100vw - 1080px)/2))}h1{font-size:24px;color:#dcb477;margin:0}header small{color:#a99a87}main{max-width:1080px;margin:32px auto;padding:0 18px}.card{background:#201c18;border:1px solid #51402d;border-radius:15px;padding:22px;margin-bottom:20px}h2{font-size:19px;margin:0 0 16px}label{display:block;margin:12px 0 6px;color:#e2d1bb}input{width:100%;padding:13px;background:#111;border:1px solid #6b5437;border-radius:9px;color:white;font:inherit}button{background:#cba064;color:#1b1309;border:0;border-radius:9px;padding:12px 18px;font-weight:700;cursor:pointer;margin-top:14px}button:disabled{opacity:.5;cursor:not-allowed}.outline{background:transparent;color:#e5c99d;border:1px solid #8b6c47}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.muted{color:#b8a894}.warn{color:#e8bf84}.error{color:#ffa9a9}.success{color:#b3e3b9}.table-wrap{overflow-x:auto}table{border-collapse:collapse;width:100%}th,td{text-align:left;padding:12px;border-bottom:1px solid #453a2f}th{color:#d9b47d}tr:last-child td{border-bottom:0}.pill{border-radius:20px;background:#463522;padding:4px 9px;font-size:12px;white-space:nowrap}.zero{color:#f4aaa5}.stats{display:flex;gap:14px;flex-wrap:wrap}.stat{flex:1;min-width:150px;background:#2d251d;border-radius:10px;padding:16px}.stat b{display:block;font-size:26px;color:#e0b87c}.hidden{display:none!important}footer{text-align:center;color:#968675;padding:30px}select{width:100%;padding:13px;background:#111;border:1px solid #6b5437;border-radius:9px;color:white;font:inherit}input[type=number]{max-width:240px}#movementForm{max-width:600px}#movementMsg{min-height:24px}td{vertical-align:top}.order-variation{min-width:165px;margin:6px 0 10px;padding:9px}.order-actions button{margin:5px 5px 0 0}.order-item{margin-bottom:10px}.order-item:last-child{margin-bottom:0}@media(max-width:700px){#orderRows tr{display:block;background:#29231e;border:1px solid #5b4730;border-radius:12px;margin:12px 0;padding:10px}#orderRows td{display:block;border:0;padding:7px 8px;overflow-wrap:anywhere}#orderRows td:before{content:attr(data-label);display:block;color:#d9b47d;font-size:12px;font-weight:700;margin-bottom:3px}#orderRows button{width:100%;margin:6px 0 0!important}#orderRows select{width:100%}#orderTable thead{display:none}#orderTable,#orderTable tbody{display:block}} </style></head><body><header><h1>SMOKE HOUSE</h1><small>Painel Administrativo • Controle de estoque • Acesso restrito</small></header><main><section id="login" class="card"><h2>Entrar no painel</h2><p class="muted">Use o e-mail e a senha cadastrados no Supabase Authentication.</p><form id="loginForm"><label for="email">E-mail</label><input id="email" type="email" autocomplete="username" required><label for="password">Senha</label><input id="password" type="password" autocomplete="current-password" required><label style="display:flex;align-items:center;gap:9px;margin-top:15px"><input id="remember" type="checkbox" checked style="width:18px;height:18px;accent-color:#cba064"> Manter conectado neste dispositivo</label><button id="enter" type="submit">Entrar</button></form><p id="loginMsg" role="status"></p></section><section id="dashboard" class="hidden"><div class="top"><div><h2>Estoque compartilhado</h2><p id="userInfo" class="muted"></p></div><div><button id="refresh" class="outline">Atualizar</button> <button id="logout" class="outline">Sair</button></div></div><div class="stats"><div class="stat"><span>Produtos</span><b id="count">—</b></div><div class="stat"><span>Unidades no estoque</span><b id="units">—</b></div><div class="stat"><span>Produtos esgotados</span><b id="out">—</b></div></div><section class="card" style="margin-top:20px"><h2>Produtos e variações</h2><p class="muted">Os valores vêm diretamente do Supabase. Atualize após cada movimentação.</p><p id="stockMsg" role="status"></p><div class="table-wrap"><table><thead><tr><th>Produto</th><th>Estoque total</th><th>Variações</th></tr></thead><tbody id="products"></tbody></table></div></section><section class="card"><h2>Entrada e saída de mercadorias</h2><p class="muted">Escolha o produto, selecione a variação quando houver e registre o motivo. Entrada soma unidades; saída retira unidades.</p><form id="movementForm"><label for="moveProduct">Produto</label><select id="moveProduct" required><option value="">Selecione um produto</option></select><div id="variationBox" class="hidden"><label for="moveVariation">Variação</label><select id="moveVariation"><option value="">Selecione a variação</option></select></div><label for="moveType">Operação</label><select id="moveType"><option value="entrada">Entrada (+)</option><option value="saida">Saída manual (−)</option></select><label for="moveQuantity">Quantidade de unidades</label><input id="moveQuantity" type="number" min="1" step="1" required placeholder="Ex.: 3"><label for="moveReason">Motivo</label><input id="moveReason" type="text" maxlength="180" required placeholder="Ex.: reposição de fornecedor ou avaria"><button id="saveMovement" type="submit">Registrar movimentação</button></form><p id="movementMsg" role="status" aria-live="polite"></p></section><section class="card"><div class="top"><h2>Histórico de movimentações</h2><button id="refreshHistory" class="outline" type="button">Atualizar histórico</button></div><p id="historyMsg" class="muted" role="status"></p><div class="table-wrap"><table><thead><tr><th>Data</th><th>Produto / variação</th><th>Quantidade</th><th>Motivo</th></tr></thead><tbody id="historyRows"></tbody></table></div></section><section class="card"><div class="top"><h2>Pedidos recebidos pelo catálogo</h2><button type="button" class="outline" id="refreshOrders">Atualizar pedidos</button></div><p class="muted">Confirme o pagamento antes de concluir. Ao confirmar a venda, o sistema desconta o estoque e registra a movimentação automaticamente. Escolha a cor dos itens com variações.</p><p id="orderMsg" role="status"></p><div class="table-wrap"><table id="orderTable"><thead><tr><th>Pedido</th><th>Cidade / data</th><th>Itens</th><th>Total</th><th>Status / ação</th></tr></thead><tbody id="orderRows"></tbody></table></div></section></section></main><footer>Smoke House • Acesso administrativo</footer><script>
 'use strict';
 const SUPABASE_URL='https://ertpylsaglkievyjzhfj.supabase.co';
 const PUBLISHABLE_KEY='sb_publishable_FJi2q6VG_gNEZup1BzkmpQ_QoHsGPwe';
@@ -136,31 +136,69 @@ $('refresh').addEventListener('click',async()=>{await load();await loadHistory()
 async function loadOrders(){
  message('orderMsg','Consultando pedidos...');
  try{
- const rows=await api('/rest/v1/pedidos?select=id,criado_em,cidade,itens,subtotal,status&order=criado_em.desc&limit=100');
- $('orderRows').replaceChildren();
- for(const p of rows){
+  const rows=await api('/rest/v1/pedidos?select=id,criado_em,cidade,itens,subtotal,status&order=criado_em.desc&limit=100');
+  $('orderRows').replaceChildren();
+  for(const p of rows){
    const tr=document.createElement('tr');
    const items=Array.isArray(p.itens)?p.itens:[];
-   const cells=['#'+p.id,p.cidade+' • '+new Date(p.criado_em).toLocaleString('pt-BR'),items.map(i=>i.quantidade+'× '+i.nome).join(' | '),'R$ '+Number(p.subtotal).toFixed(2).replace('.',','),p.status];
-   for(const val of cells){const td=document.createElement('td');td.textContent=val;tr.append(td);}
+   const labels=['Pedido','Cidade / data','Itens','Total','Status / ação'];
+   const values=['#'+p.id,p.cidade+' • '+new Date(p.criado_em).toLocaleString('pt-BR'),'', 'R$ '+Number(p.subtotal).toFixed(2).replace('.',','),p.status];
+   const cells=labels.map((label,index)=>{
+     const td=document.createElement('td');td.dataset.label=label;td.textContent=values[index];tr.append(td);return td;
+   });
+   const choices={};
+   for(const [index,item] of items.entries()){
+     const block=document.createElement('div');block.className='order-item';
+     const line=document.createElement('div');line.textContent=(item.quantidade||'?')+'× '+(item.nome||'Produto não identificado');block.append(line);
+     const productId=Number(item.referencia_catalogo);
+     const vars=variationCache.filter(v=>v.produto_id===productId);
+     if(p.status==='pendente' && vars.length){
+       const select=document.createElement('select');select.className='order-variation';
+       select.setAttribute('aria-label','Variação de '+item.nome);
+       select.add(new Option('Selecione a cor / modelo',''));
+       for(const v of vars)select.add(new Option(v.nome+' (estoque: '+v.estoque+')',String(v.id)));
+       block.append(select);choices[index]=select;
+     }
+     cells[2].append(block);
+   }
    if(p.status==='pendente'){
-     const cell=tr.lastElementChild;
-     const ok=document.createElement('button');ok.textContent='Marcar como confirmado';
-     ok.onclick=()=>changeOrder(p.id,'confirmado');
-     const cancel=document.createElement('button');cancel.textContent='Cancelar';cancel.className='outline';cancel.style.marginLeft='6px';
-     cancel.onclick=()=>changeOrder(p.id,'cancelado');
-     cell.append(document.createElement('br'),ok,cancel);
+     const action=document.createElement('div');action.className='order-actions';
+     const ok=document.createElement('button');ok.textContent='Confirmar venda e baixar estoque';
+     ok.onclick=()=>confirmSale(p,choices,ok);
+     const cancel=document.createElement('button');cancel.textContent='Cancelar pedido';cancel.className='outline';
+     cancel.onclick=()=>cancelOrder(p.id,cancel);
+     action.append(ok,cancel);cells[4].append(action);
    }
    $('orderRows').append(tr);
+  }
+  message('orderMsg',rows.length?rows.length+' pedido(s) encontrado(s).':'Nenhum pedido recebido ainda.');
+ }catch(e){message('orderMsg','Erro ao carregar pedidos: '+e.message,true)}
+}
+
+async function confirmSale(order,choices,button){
+ const selected={};
+ for(const [index,select] of Object.entries(choices)){
+   if(!select.value){alert('Selecione a cor ou modelo de todos os produtos com variação.');select.focus();return;}
+   selected[index]=Number(select.value);
  }
- message('orderMsg',rows.length?rows.length+' pedido(s) encontrado(s).':'Nenhum pedido recebido ainda.');
- }catch(e){message('orderMsg','Erro ao carregar pedidos: '+e.message,true);}
+ if(!confirm('Confirmar pagamento e venda do pedido #'+order.id+'?\n\nO estoque será descontado automaticamente e a operação não poderá ser desfeita por este botão.'))return;
+ button.disabled=true;message('orderMsg','Confirmando pedido e atualizando estoque...');
+ try{
+   await api('/rest/v1/rpc/confirmar_pedido_com_estoque',{method:'POST',body:JSON.stringify({p_id:order.id,p_variacoes:selected})});
+   await Promise.all([load(),loadHistory(),loadOrders()]);
+   alert('Venda #'+order.id+' confirmada! Estoque atualizado automaticamente.');
+ }catch(e){message('orderMsg','Não foi possível confirmar: '+e.message,true);alert('Não foi feita a confirmação: '+e.message);button.disabled=false;}
 }
-async function changeOrder(id,status){
- if(!confirm('Pedido #'+id+': '+status+'? ATENÇÃO: esta ação não altera o estoque automaticamente.'))return;
- try{await api('/rest/v1/rpc/atualizar_status_pedido',{method:'POST',body:JSON.stringify({p_id:id,p_status:status})});await loadOrders();alert('Pedido atualizado. Se foi confirmado, registre a saída de estoque manualmente.');}
- catch(e){alert('Erro: '+e.message);}
+
+async function cancelOrder(id,button){
+ if(!confirm('Cancelar pedido #'+id+'? Não haverá baixa de estoque.'))return;
+ button.disabled=true;
+ try{
+   await api('/rest/v1/rpc/atualizar_status_pedido',{method:'POST',body:JSON.stringify({p_id:id,p_status:'cancelado'})});
+   await loadOrders();
+ }catch(e){alert('Erro ao cancelar: '+e.message);button.disabled=false;}
 }
+
 $('refreshOrders').addEventListener('click',loadOrders);
 
 $('logout').addEventListener('click',()=>{const oldToken=accessToken;clearSession();if(oldToken)fetch(SUPABASE_URL+'/auth/v1/logout',{method:'POST',headers:{apikey:PUBLISHABLE_KEY,Authorization:'Bearer '+oldToken}}).catch(()=>{});$('dashboard').classList.add('hidden');$('login').classList.remove('hidden');message('loginMsg','Sessão encerrada.');});
